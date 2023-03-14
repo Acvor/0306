@@ -25,9 +25,12 @@ public class Main {
     private String columnNames[] = {"min_salary", "name"};
     private Object[][] rowdata = null;
 
+    private JButton deleteproduct;
+
     public Main(){
 
-
+        deleteproduct = new JButton("É¾³ý");
+        deleteproduct.setBounds(300,500,100,35);
         jFrame = new JFrame("Ö÷½çÃæ");
         jFrame.setSize(1200,800);
         jPanel = (JPanel) jFrame.getContentPane();
@@ -88,6 +91,7 @@ public class Main {
             r.setHorizontalAlignment(JLabel.CENTER);
             table.setDefaultRenderer(Object.class, r);
             jPanel.add(jscrollpane);
+            jPanel.add(deleteproduct);
         });
 
         jMenu.add(item01);
