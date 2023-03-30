@@ -1,5 +1,7 @@
 package cn.edu.guet.main;
 import cn.edu.guet.bean.Product;
+import cn.edu.guet.pay.WXPay;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
@@ -19,28 +21,33 @@ public class Main {
     JMenuItem item01 = new JMenuItem("查看商品");
     JMenuItem item02 = new JMenuItem("销售商品");
     JMenuItem item03 = new JMenuItem("增加商品");
+    JMenuItem item04 = new JMenuItem("修改商品");
+    JMenuItem item05 = new JMenuItem("删除商品");
 
     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
     int wide = (int)(dim.width*0.8);
     int height = (int)(dim.height*0.8);
+    int Goods_Quantity=0;
+    int pro_rowdata_x;//可以无初始值，后续由当前商品编号GoodsNumber赋予
+    int rowdata_x = -1;//初始值-1，代表无商品，0代表第一个商品
 
     JTable table;
     JScrollPane jscrollpane = new JScrollPane();
     private String columnNames[] = {"id", "name","price","type"};
     private Object[][] pro_rowdata =null;
-    private Object[][] rowdata = {
-            {" "," "," "," "}
-};
+    private Object[][] rowdata = new Object[10][columnNames.length];
 
     private JButton deleteproduct;
     private  JButton pay;
 
+    JLabel hint = new JLabel();
+
 
     public Main(){
         pay = new JButton("结账");
-        pay.setBounds(300,500,100,35);
-        deleteproduct = new JButton("删除");
-        deleteproduct.setBounds(300,500,100,35);
+        pay.setBounds(600,500,100,35);
+        deleteproduct = new JButton("删除上一个商品");
+        deleteproduct.setBounds(250,500,200,35);
 
         jFrame = new JFrame("主界面");
         jFrame.setSize(1200,800);
@@ -51,49 +58,119 @@ public class Main {
         //jFrame.setLocation(20 , 20);
         //jFrame.setVisible(true);
 
+        pay.addActionListener(e -> {
+            int price = 0;
+            String name="";
+            int i=0;
+            while(rowdata_x>=0) {//判断rowdata_x即可知道菜单里有无商品
+                name+=rowdata[i][1]+";";
+                price += (int) Float.parseFloat((String) rowdata[i][2]);
+                if(i==rowdata_x)break;//i和rowdata_x一样，也就是当前菜单里商品数量一样时，跳出循环，不再i++
+                i++;
+            }
+            if(price>0) {//有价格才能调用显示支付二维码
+                WXPay.unifiedOrder(name, price * 100);
+
+            /*
+            显示二维码
+             */
+                JFrame jFrame = new JFrame("结账页面");
+                jFrame.setSize(300, 330);
+                jFrame.setLocation(wide / 2 + 50, height / 2 - 100);
+
+                JLabel pay = new JLabel();
+                ImageIcon icon = new ImageIcon("pay.jpg");
+                icon.setImage(icon.getImage().getScaledInstance(300, 300, Image.SCALE_DEFAULT));
+
+                pay.setVerticalTextPosition(JLabel.TOP);
+                pay.setBounds(0, 0, 300, 300);
+
+                String strMsg1 = name;
+                String strMsg = "<html><body bgcolor='green' color='red'>" + strMsg1 + "<br>" + price + "<body></html>";
+                //pay.setText(strMsg);
+                pay.setIcon(icon);
+
+                JPanel jPanel = (JPanel) jFrame.getContentPane();
+                jPanel.setLayout(null);
+                jPanel.add(pay);
+                jFrame.setVisible(true);
+            }
+            else System.out.println("当前未选购商品！");
+        });
+
+        deleteproduct.addActionListener(e -> {
+                    jPanel.repaint();
+                    jPanel.remove(hint);
+                    //取消选购商品代码
+                    if (rowdata_x >= 0) {
+                        System.out.println("取消" + rowdata[rowdata_x][1] + " ，，，");
+                        rowdata[rowdata_x] = new Object[]{" ", " ", " ", " "};
+                        jPanel.repaint();
+                        rowdata_x--;
+                    } else System.out.println("当前没有选购商品！");
+
+                });
+
 
         item01.addActionListener(e -> {
+            /*
+            清屏
+             */
+            jPanel.removeAll();
+            jPanel.repaint();
+            jMenu.add(item01);
+            jMenu.add(item02);
+            jMenu2.add(item03);
+            jMenuBar.add(jMenu);
+            jMenuBar.add(jMenu2);
+            jMenuBar.setBounds(0,0,200,100);
+            jPanel.add(jMenuBar);
+            //清屏时把rowdata也初始化
+            rowdata = new Object[10][columnNames.length];
+            rowdata_x = -1;
+            /*
+            清屏
+             */
             Connection conn = null;
             String url="jdbc:oracle:thin:@106.52.247.48:1521:orcl";
             String sql = "SELECT * FROM GOODS";
             PreparedStatement pstmt;
             ResultSet  rs;
-                try {
-                    Class.forName("oracle.jdbc.driver.OracleDriver");//1.
-                    conn= DriverManager.getConnection(url,"hgs","Grcl1234U");//2.
-                    pstmt = conn.prepareStatement(sql);
-                    rs = pstmt.executeQuery();
-                    List<Product> productList = new ArrayList();
-                    while (rs.next()){
-                        Product product = new Product();
-                        product.setId(rs.getInt("id"));
-                        product.setName(rs.getString("name"));
-                        product.setPrice(rs.getFloat("price"));
-                        product.setType(rs.getString("type"));
+            try {
+                Class.forName("oracle.jdbc.driver.OracleDriver");//1.
+                conn= DriverManager.getConnection(url,"hgs","Grcl1234U");//2.
+                pstmt = conn.prepareStatement(sql);
+                rs = pstmt.executeQuery();
+                List<Product> productList = new ArrayList();
+                while (rs.next()){
+                    Product product = new Product();
+                    product.setId(rs.getInt("id"));
+                    product.setName(rs.getString("name"));
+                    product.setPrice(rs.getFloat("price"));
+                    product.setType(rs.getString("type"));
 
-                        productList.add(product);
-                    }
-                    rowdata = new Object[productList.size()][columnNames.length];
+                    productList.add(product);
+                }
+                rowdata = new Object[productList.size()][columnNames.length];
 
-                    for(int i=0;i<productList.size();i++){
-                        rowdata[i] = new Object[]{productList.get(i).getId(),productList.get(i).getName(),productList.get(i).getPrice(),productList.get(i).getType()};
-                    }
-
-                } catch (ClassNotFoundException | SQLException ex) {
-                    ex.printStackTrace();
-                }finally {
-                    try {
-                        conn.close();
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                    }
+                for(int i=0;i<productList.size();i++){
+                    rowdata[i] = new Object[]{productList.get(i).getId(),productList.get(i).getName(),productList.get(i).getPrice(),productList.get(i).getType()};
                 }
 
+            } catch (ClassNotFoundException | SQLException ex) {
+                ex.printStackTrace();
+            }finally {
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
             //点击菜单内的代码
             //table = JTable(rowdata,columnNames);
             //点击菜单内的代码
             table = new JTable(rowdata, columnNames);
-            jscrollpane.setBounds(0, 100, 700, 80);
+            jscrollpane.setBounds(0, 100, 700, 200);
             jscrollpane.setViewportView(table);
             table.setRowHeight(35);
             /**
@@ -103,9 +180,28 @@ public class Main {
             r.setHorizontalAlignment(JLabel.CENTER);
             table.setDefaultRenderer(Object.class, r);
             jPanel.add(jscrollpane);
-            jPanel.add(deleteproduct);
+
         });
         item02.addActionListener(e -> {
+            /*
+            清屏
+             */
+            jPanel.removeAll();
+            jPanel.repaint();
+            jMenu.add(item01);
+            jMenu.add(item02);
+            jMenu2.add(item03);
+            jMenuBar.add(jMenu);
+            jMenuBar.add(jMenu2);
+            jMenuBar.setBounds(0,0,200,100);
+            jPanel.add(jMenuBar);
+            //清屏时把rowdata也初始化
+            rowdata = new Object[10][columnNames.length];
+            rowdata_x = -1;
+            /*
+            清屏
+             */
+
             Connection conn = null;
             String url="jdbc:oracle:thin:@106.52.247.48:1521:orcl";
             String sql = "SELECT * FROM GOODS";
@@ -120,15 +216,23 @@ public class Main {
                 conn= DriverManager.getConnection(url,"hgs","Grcl1234U");//2.
                 pstmt = conn.prepareStatement(sql);
                 rs = pstmt.executeQuery();
-                int GoodsNumber = 0;//商品数量
+                int GoodsNumber = 0;//商品编号
                 int GoodsX=800,GoodsY=100;//初始商品显示位置
-                JLabel[] jLabels = new JLabel[8];
-                JLabel product01 = new JLabel();
+                while (rs.next()){
+                    Goods_Quantity=rs.getInt("id");//获取此时仓库中商品数量
+                }
+                pro_rowdata = new Object[Goods_Quantity][columnNames.length];
+
+                pstmt = conn.prepareStatement(sql);
+                rs = pstmt.executeQuery();
                 while(rs.next()) {
-                    product01 = new JLabel();
+                    JLabel product01 = new JLabel();
                     product01.setHorizontalTextPosition(JLabel.RIGHT);
                     product01.setBounds(GoodsX, GoodsY, 100, 150);
-                    if (GoodsNumber != 0 && GoodsNumber % 2 != 0) GoodsY += 200;
+                    if (GoodsNumber != 0 && GoodsNumber % 2 != 0) {
+                        GoodsY += 200;
+                        GoodsX -= 200;
+                    }
                     else GoodsX += 200;
 
                     String strMsg1 = rs.getString("name");
@@ -143,22 +247,55 @@ public class Main {
                     product01.setText(strMsg);
                     //product01.setIcon(icon);
 
+
                     //将商品的信息放到pro_rowdata中，方便后续加入到rowdata
-                    pro_rowdata = new Object[jLabels.length][columnNames.length];
+
                     pro_rowdata[GoodsNumber] = new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("price"), rs.getString("type")};
-                    jLabels[GoodsNumber] = product01;
+
+                    int finalGoodsNumber = GoodsNumber;
+                    product01.addMouseListener(new MouseListener() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                                jPanel.repaint();
+                                pro_rowdata_x = finalGoodsNumber;
+                                if(rowdata_x < rowdata.length - 1) rowdata_x++;
+                                if(rowdata_x == rowdata.length - 1) {
+                                    hint.setHorizontalTextPosition(JLabel.RIGHT);
+                                    hint.setBounds(200, 650, 150, 50);
+                                    hint.setText("<html><body  color='black'><br>选购商品已达到上限!<br><body></html>");
+                                    jPanel.add(hint);
+                                }
+                                System.out.println("点击" + pro_rowdata[pro_rowdata_x][1] + " ，，，");
+                                rowdata[rowdata_x] = pro_rowdata[pro_rowdata_x];
+                                jPanel.repaint();
+                        }
+
+                        @Override
+                        public void mousePressed(MouseEvent e) {
+
+                        }
+
+                        @Override
+                        public void mouseReleased(MouseEvent e) {
+
+                        }
+
+                        @Override
+                        public void mouseEntered(MouseEvent e) {
+
+                        }
+
+                        @Override
+                        public void mouseExited(MouseEvent e) {
+
+                        }
+
+                    });
                     GoodsNumber++;
                     jPanel.add(product01);
                     jPanel.repaint();
-                }
-                /*
-                for (int i=0;i<jLabels.length;i++) {
-                    JlabelAddmouselistener[] jlabelAddmouselisteners = new JlabelAddmouselistener[jLabels.length];
-                    jlabelAddmouselisteners[i].Addmouselistener(rowdata,pro_rowdata);
-                }
 
-                 */
-
+                }
 
             } catch (ClassNotFoundException | SQLException ex) {
                 ex.printStackTrace();
@@ -176,27 +313,41 @@ public class Main {
             r.setHorizontalAlignment(JLabel.CENTER);
             table.setDefaultRenderer(Object.class, r);
             jPanel.add(jscrollpane);
+            jPanel.add(deleteproduct);
             jPanel.add(pay);
             jPanel.repaint();
+
             /*
             try {
                 conn.close();
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-
              */
 
         });
 
         item03.addActionListener(e -> {
+
             System.out.println("调用增加商品类");
             AddGoods addGoods = new AddGoods("增加商品");
+        });
+
+        item04.addActionListener(e -> {
+            System.out.println("调用修改商品类");
+            UpdateGoods updateGoods = new UpdateGoods("修改商品");
+        });
+
+        item05.addActionListener(e -> {
+            System.out.println("调用删除商品类");
+            DeleteGoods deleteGoods = new DeleteGoods("删除商品");
         });
 
         jMenu.add(item01);
         jMenu.add(item02);
         jMenu2.add(item03);
+        jMenu2.add(item04);
+        jMenu2.add(item05);
         jMenuBar.add(jMenu);
         jMenuBar.add(jMenu2);
         jMenuBar.setBounds(0,0,200,100);
@@ -207,7 +358,6 @@ public class Main {
     public JFrame getjFrame(){
         return jFrame;
     }
-
 
 
 }

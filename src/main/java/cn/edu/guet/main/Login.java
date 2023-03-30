@@ -15,6 +15,7 @@ public class Login extends JFrame {
     private JPanel jPanel;
     private JButton login;
     private JButton register;
+    private JLabel Label_account,Label_password;
     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
     int wide = (int)(dim.width*0.8);
     int height = (int)(dim.height*0.8);
@@ -22,7 +23,7 @@ public class Login extends JFrame {
     public Login(String title){
         super(title);
         setSize(400,320);
-        setLocation(wide/2,height/2);//窗口位置
+        setLocation(wide/2,height/2-50);//窗口位置
         setResizable(false);//禁止缩放
         jPanel=(JPanel)this.getContentPane();
         jPanel.setLayout(null);//布局为空
@@ -41,6 +42,15 @@ public class Login extends JFrame {
 
         register = new JButton("注册");
         register.setBounds(105,240,190,35);
+
+        Label_account = new JLabel();
+        Label_account.setText("用户名");
+        Label_account.setBounds(35,120,80,35);
+        Label_password = new JLabel();
+        Label_password.setText("密码");
+        Label_password.setBounds(35,160,80,35);
+        jPanel.add(Label_account);
+        jPanel.add(Label_password);
 
         //给 登录 添加监听事件 用匿名内部类
         login.addActionListener(e ->  {

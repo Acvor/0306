@@ -11,6 +11,7 @@ public class Register extends JFrame {
     private JTextField password;
     private JPanel jPanel;
     private JButton register;
+    private JLabel Label_account,Label_password;
 
     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
     int wide = (int) (dim.width * 0.8);
@@ -35,6 +36,15 @@ public class Register extends JFrame {
 
         register = new JButton("注册");
         register.setBounds(105, 200, 190, 35);
+
+        Label_account = new JLabel();
+        Label_account.setText("注册用户名");
+        Label_account.setBounds(20,120,80,35);
+        Label_password = new JLabel();
+        Label_password.setText("注册密码");
+        Label_password.setBounds(20,160,80,35);
+        jPanel.add(Label_account);
+        jPanel.add(Label_password);
 
         //给 注册 添加监听事件 用匿名内部类
         register.addActionListener(e -> {
@@ -72,14 +82,11 @@ public class Register extends JFrame {
                         else whether_username = true;
                     }
                     if(whether_username){//不存在则新建用户
-                        String sql = "INSERT INTO HGS_USERS VALUES ('111','11')";
+                        String sql = "INSERT INTO HGS_USERS VALUES (?,?)";
                         pstmt = conn.prepareStatement(sql);
-                        /*
                         pstmt.setString(1, username);
                         pass = PasswordEncoder.GetMySaltPassword(pass);
                         pstmt.setString(2, pass);
-
-                         */
                         System.out.println("注册成功！");
                     }else System.out.println("用户已存在");
                 } else {

@@ -151,8 +151,8 @@ public class PasswordEncoder {
 
 
 
-        PasswordEncoder passwordEncoder = new PasswordEncoder("a");
-        String password = passwordEncoder.encode("hgs1234");
+        PasswordEncoder passwordEncoder = new PasswordEncoder("这是我的盐");
+        String password = passwordEncoder.encode("zs1234");
         System.out.println(password);
     }
 //	public static void main(String[] args) {
