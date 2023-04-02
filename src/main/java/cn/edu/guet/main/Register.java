@@ -11,6 +11,8 @@ public class Register extends JFrame {
     private JTextField password;
     private JPanel jPanel;
     private JButton register;
+    private JLabel Label_account,Label_password;
+
     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
     int wide = (int) (dim.width * 0.8);
     int height = (int) (dim.height * 0.8);
@@ -34,6 +36,15 @@ public class Register extends JFrame {
 
         register = new JButton("注册");
         register.setBounds(105, 200, 190, 35);
+
+        Label_account = new JLabel();
+        Label_account.setText("注册用户名");
+        Label_account.setBounds(20,120,80,35);
+        Label_password = new JLabel();
+        Label_password.setText("注册密码");
+        Label_password.setBounds(20,160,80,35);
+        jPanel.add(Label_account);
+        jPanel.add(Label_password);
 
         //给 注册 添加监听事件 用匿名内部类
         register.addActionListener(e -> {
@@ -68,6 +79,7 @@ public class Register extends JFrame {
                     while(resultSet.next()) {
                         //存在则false
                         if (resultSet.getString("USER").equals(username)) whether_username = false;
+                        else whether_username = true;
                     }
                     if(whether_username){//不存在则新建用户
                         String sql = "INSERT INTO HGS_USERS VALUES (?,?)";
@@ -75,15 +87,8 @@ public class Register extends JFrame {
                         pstmt.setString(1, username);
                         pass = PasswordEncoder.GetMySaltPassword(pass);
                         pstmt.setString(2, pass);
-                        System.out.println("Register Success.");
-
-                        //游标能向下移动则 说明查询到了结果 用户名和密码正确
-                    /*
-                    if(resultSet.next()) System.out.println("Login Success.");
-                    else System.out.println("Login Filed.");
-
-                     */
-                    }else System.out.println("USER EXISTS.");
+                        System.out.println("注册成功！");
+                    }else System.out.println("用户已存在");
                 } else {
                     System.out.println("COnnection Defeat!");
                 }
@@ -99,7 +104,7 @@ public class Register extends JFrame {
         });
 
         jPanel.add(register);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);//始终显示
     }
 }
